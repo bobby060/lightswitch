@@ -1,0 +1,10 @@
+[package]
+name = "lightswitch"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aws-config = { version = "1.5.17", features = ["behavior-version-latest"] }
+aws-sdk-ec2 = "1.113.0"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
