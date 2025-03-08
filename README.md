@@ -22,6 +22,7 @@ lightswitch
     configure: set the aws region
 
 ```
+If you run stop or start with no options, lightswitch will list all instances in current region and let you pick which to start
 
 
 Build yourself

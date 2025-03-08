@@ -17,7 +17,7 @@ impl CliParser {
             "start" => CommandType::Start,
             "stop" => CommandType::Stop,
             "configure" => CommandType::Configure,
-            _ => return Err("Invalid command".to_string()),
+            _ => CommandType::Help,
         };
 
         let mut options_itr = args[2..].iter();
@@ -43,6 +43,7 @@ pub enum CommandType {
     Start,
     Stop,
     Configure,
+    Help,
 }
 
 #[derive(Debug)]

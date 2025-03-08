@@ -4,17 +4,19 @@ mod lightswitch;
 use cli_parser::{CliOption, CliOptions, CliParser, Command, CommandType};
 use lightswitch::config::LightswitchConfig;
 use lightswitch::Ec2Controller;
-const HELP: &str = "Usage: lightswitch <command> [<instance_id>| -n <name>]
+const HELP: &str = "lightswitch usage:
 
-Commands:
-    list: List all instance
-
-    start <instance_id> | -n <name>: Start an instance
-    stop <instance_id> | -n <name>: Stop an instance";
+list: List all instances
+start [-i <instance_id> | -n <name> | --name <name> | --instance <instance_id>]: Start an instance
+stop [-i <instance_id> | -n <name> | --name <name> | --instance <instance_id>]: Stop an instance
+configure: Set the aws region
+help: Show this help message";
 
 #[tokio::main]
 async fn main() {
     let mut config: Option<LightswitchConfig> = LightswitchConfig::load().ok();
+
+    println!("Lightswitch is a simple CLI tool to start and stop EC2 instances.\n\n");
 
     // If no config is found, configure the controller
     if config.is_none() {
@@ -33,7 +35,7 @@ async fn main() {
     match command.as_ref().unwrap().command {
         CommandType::List => {
             let controller = Ec2Controller::new(&region).await;
-            println!("{}", controller.list_instances().await.unwrap());
+            controller.list_instances(false).await.unwrap();
         }
         CommandType::Start => {
             let controller = Ec2Controller::new(&region).await;
@@ -63,11 +65,10 @@ async fn main() {
 fn build_parser() -> CliParser {
     let mut options = CliOptions::new();
     options
-        .add_option(CliOption::new(CommandType::List, "-n", "--name"))
         .add_option(CliOption::new(CommandType::Start, "-n", "--name"))
-        .add_option(CliOption::new(CommandType::Start, "-i", "--index"))
+        .add_option(CliOption::new(CommandType::Start, "-i", "--instance"))
         .add_option(CliOption::new(CommandType::Stop, "-n", "--name"))
-        .add_option(CliOption::new(CommandType::Stop, "-i", "--index"));
+        .add_option(CliOption::new(CommandType::Stop, "-i", "--instance"));
 
     CliParser::new(options)
 }

@@ -1,17 +1,11 @@
 pub mod config;
 
-use aws_config::{BehaviorVersion, SdkConfig};
+use aws_config::SdkConfig;
 use aws_sdk_ec2::client::Waiters;
-use aws_sdk_ec2::{
-    config::{Config, Region},
-    Client,
-};
+use aws_sdk_ec2::{config::Region, Client};
 
-use aws_sdk_ec2::types::Instance;
-use aws_sdk_ec2::types::Tag;
 use aws_sdk_ec2::Error;
 use std::collections::HashMap;
-use std::io::{Error as IoError, ErrorKind};
 use std::time::Duration;
 
 use config::LightswitchConfig;
@@ -57,7 +51,7 @@ impl Ec2Controller {
         }
     }
 
-    pub async fn list_instances(&self) -> Result<String, Error> {
+    pub async fn list_instances(&self, select: bool) -> Result<Option<String>, Error> {
         let client = Client::new(&self.config);
         let response = client.describe_instances().send().await?;
         let instances = Vec::from_iter(
@@ -99,26 +93,40 @@ impl Ec2Controller {
         let len_aws_id = 20;
         let len_state = 10;
 
-        output += "Current Instances:\n";
+        output += &format!("Current Instances in {}\n", self.config.region().unwrap());
         output += &format!(
-            "|{}|{}|{}|\n",
+            "   |{}|{}|{}|\n",
             len_padded_string("Name", max_name_len),
             len_padded_string("ID", len_aws_id),
             len_padded_string("State", len_state)
         );
-        output += &"-".repeat(max_name_len + len_aws_id + len_state);
+        output += &"-".repeat(max_name_len + len_aws_id + len_state + 8);
         output += "\n";
 
-        for instance in instances {
+        let mut index = 0;
+        for instance in instances.clone() {
             output += &format!(
-                "|{}|{}|{}|\n",
+                "<{}>|{}|{}|{}|\n",
+                index,
                 len_padded_string(&instance.0.unwrap_or("".to_string()), max_name_len),
                 len_padded_string(&instance.1, len_aws_id),
                 len_padded_string(&instance.2, len_state)
             );
+            index += 1;
         }
 
-        Ok(output)
+        println!("{}", output);
+
+        if select {
+            let mut input = String::new();
+            println!("Enter the number corresponding to the instance you want to select:");
+            std::io::stdin().read_line(&mut input).unwrap();
+            let index = input.trim().parse::<usize>().unwrap();
+            let instance = instances[index].clone();
+            Ok(Some(instance.1))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Convert a name to an instance ID if that name exists as a tag on an instance
@@ -150,11 +158,20 @@ impl Ec2Controller {
             .to_string())
     }
 
+    /// Start an instance
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Contains the instance ID or name to start
+    ///
+    /// # Returns
     pub async fn start_instance(&self, options: &HashMap<String, String>) -> Result<String, Error> {
         let instance_id = if options.contains_key("-n") {
             self.name_to_id(&options["-n"]).await?
-        } else {
+        } else if options.contains_key("-i") {
             options["-i"].clone()
+        } else {
+            self.list_instances(true).await?.unwrap()
         };
 
         let client = Client::new(&self.config);
@@ -189,11 +206,19 @@ impl Ec2Controller {
             .to_string())
     }
 
+    /// Stop an instance
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Contains the instance ID or name to stop
+    ///
     pub async fn stop_instance(&self, options: &HashMap<String, String>) -> Result<(), Error> {
         let instance_id = if options.contains_key("-n") {
             self.name_to_id(&options["-n"]).await?
-        } else {
+        } else if options.contains_key("-i") {
             options["-i"].clone()
+        } else {
+            self.list_instances(true).await?.unwrap()
         };
 
         let client = Client::new(&self.config);
