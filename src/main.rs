@@ -1,7 +1,7 @@
 mod cli_parser;
 mod lightswitch;
 
-use cli_parser::{CliOption, CliOptions, CliParser, Command, CommandType};
+use cli_parser::{CliOption, CliOptions, CliParser, CommandType};
 use lightswitch::config::LightswitchConfig;
 use lightswitch::Ec2Controller;
 const HELP: &str = "lightswitch usage:

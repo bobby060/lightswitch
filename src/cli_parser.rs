@@ -56,10 +56,6 @@ impl Command {
     fn new(command: CommandType, options: HashMap<String, String>) -> Self {
         Self { command, options }
     }
-
-    pub fn to_string(&self) -> String {
-        format!("{:?}", self.command)
-    }
 }
 
 #[derive(Debug)]
