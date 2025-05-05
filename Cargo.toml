@@ -1,5 +1,5 @@
 [package]
-name = "lightswitch"
+name = "aws-lightswitch"
 version = "0.1.0"
 edition = "2021"
 authors = ["Bobby Norwood"]
