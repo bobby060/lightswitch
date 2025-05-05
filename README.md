@@ -15,7 +15,7 @@ See [here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-inst
 
 
 ```
-lightswitch
+aws-lightswitch
     list: List all instance
 
     start [-i <instance_id> | -n <name>]: Start an instance
@@ -27,21 +27,20 @@ lightswitch
 If you run stop or start with no options, lightswitch will list all instances in current region and let you pick which to start
 
 
+Install from cargo
+```
+cargo install aws-lightswitch
+```
+
+
 Build yourself
 ```
 cargo build --release
 ```
 
-After that you can run via `./lightswitch`
-
-Run
-```
-cargo run -- --help
+After that you can run via `./aws-lightswitch
+`
 
 
-## Roadmap:
-- [ ] Change location config file to be user-configurable
-- [ ] Set default config location based on OS
-- [ ] Allow access via IAM
-- [ ] Add support for GCP, Azure
+
 
