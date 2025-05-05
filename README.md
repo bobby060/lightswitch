@@ -1,5 +1,7 @@
 # lightswitch
-A command line utility for starting/stopping Ec2 instances
+A command line utility for starting/stopping Ec2 instances.
+
+AWS CLI doesn't offer convenient ways to start/stop instances, so I created lightswitch to make it easier.
 
 
 
@@ -30,7 +32,7 @@ Build yourself
 cargo build --release
 ```
 
-After that you can run via `.'lightswitch`
+After that you can run via `./lightswitch`
 
 Run
 ```

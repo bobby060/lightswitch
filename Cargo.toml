@@ -2,6 +2,14 @@
 name = "lightswitch"
 version = "0.1.0"
 edition = "2021"
+authors = ["Bobby Norwood"]
+readme = "README.md"
+license = "Apache-2.0"
+description = "A simple CLI to start and stop EC2 instances"
+homepage = "https://github.com/bobby060/lightswitch"
+repository = "https://github.com/bobby060/lightswitch"
+keywords = ["aws", "cli", "ec2"]
+categories = ["aws", "command-line-utilities"]
 
 [dependencies]
 aws-config = { version = "1.5.17", features = ["behavior-version-latest"] }

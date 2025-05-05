@@ -10,6 +10,10 @@ impl CliParser {
     }
 
     pub fn parse(&self, args: Vec<String>) -> Result<Command, String> {
+        if args.len() == 1 {
+            return Ok(Command::new(CommandType::Help, HashMap::new()));
+        }
+
         let command = args[1].clone();
 
         let command = match command.as_str() {
@@ -100,17 +104,21 @@ impl CliOptions {
 
     pub fn validate(&self, arg: String, command: &CommandType) -> Result<(), String> {
         let long_name = if arg.starts_with("--") {
-            arg.clone()
+            Some(arg.clone())
         } else {
             self.short_to_long
                 .get(&arg)
                 .map(|long_name| long_name.clone())
-                .unwrap()
         };
 
-        if !self.valid_options.contains(&(command.clone(), long_name)) {
+        if long_name.is_none()
+            || !self
+                .valid_options
+                .contains(&(command.clone(), long_name.unwrap()))
+        {
             return Err(format!("Invalid option: {}", arg));
         }
+
         Ok(())
     }
 }

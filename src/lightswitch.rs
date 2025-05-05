@@ -4,7 +4,7 @@ use aws_config::SdkConfig;
 use aws_sdk_ec2::client::Waiters;
 use aws_sdk_ec2::{config::Region, Client};
 
-use aws_sdk_ec2::Error;
+use aws_sdk_ec2::Error as Ec2Error;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -16,7 +16,7 @@ pub struct Ec2Controller {
 
 impl Ec2Controller {
     /// Configure the controller by setting the AWS region
-    pub async fn configure(&self) -> Result<(), Error> {
+    pub async fn configure(&self) -> Result<(), Ec2Error> {
         let client = Client::new(&self.config);
         let response = client.describe_regions().send().await?;
         let regions = response.regions();
@@ -51,7 +51,7 @@ impl Ec2Controller {
         }
     }
 
-    pub async fn list_instances(&self, select: bool) -> Result<Option<String>, Error> {
+    pub async fn list_instances(&self, select: bool) -> Result<Option<String>, Ec2Error> {
         let client = Client::new(&self.config);
         let response = client.describe_instances().send().await?;
         let instances = Vec::from_iter(
@@ -71,6 +71,11 @@ impl Ec2Controller {
                     )
                 }),
         );
+
+        if instances.is_empty() {
+            println!("No instances found in {}", self.config.region().unwrap());
+            return Ok(None);
+        }
 
         // Build the output string
         let mut output = String::new();
@@ -138,7 +143,7 @@ impl Ec2Controller {
     /// # Returns
     ///
     /// The instance ID of the instance with the given name
-    async fn name_to_id(&self, name: &str) -> Result<String, Error> {
+    async fn name_to_id(&self, name: &str) -> Result<String, Ec2Error> {
         let client = Client::new(&self.config);
         let response = client.describe_instances().send().await?;
         Ok(response
@@ -165,7 +170,10 @@ impl Ec2Controller {
     /// * `options` - Contains the instance ID or name to start
     ///
     /// # Returns
-    pub async fn start_instance(&self, options: &HashMap<String, String>) -> Result<String, Error> {
+    pub async fn start_instance(
+        &self,
+        options: &HashMap<String, String>,
+    ) -> Result<String, Ec2Error> {
         let instance_id = if options.contains_key("-n") {
             self.name_to_id(&options["-n"]).await?
         } else if options.contains_key("-i") {
@@ -212,7 +220,7 @@ impl Ec2Controller {
     ///
     /// * `options` - Contains the instance ID or name to stop
     ///
-    pub async fn stop_instance(&self, options: &HashMap<String, String>) -> Result<(), Error> {
+    pub async fn stop_instance(&self, options: &HashMap<String, String>) -> Result<(), Ec2Error> {
         let instance_id = if options.contains_key("-n") {
             self.name_to_id(&options["-n"]).await?
         } else if options.contains_key("-i") {

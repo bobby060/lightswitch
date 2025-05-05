@@ -22,6 +22,7 @@ async fn main() {
     if config.is_none() {
         println!("No region set, setting now...");
         let controller = Ec2Controller::new("us-east-2").await;
+        println!("Default region set to us-east-2, to change this run `lightswitch configure`");
         controller.configure().await.unwrap();
         config = LightswitchConfig::load().ok();
     }
@@ -32,17 +33,29 @@ async fn main() {
 
     let command = parser.parse(std::env::args().collect());
 
+    if command.is_err() {
+        println!("{}\n", command.err().unwrap());
+        println!("{}", HELP);
+        std::process::exit(1);
+    }
+
     match command.as_ref().unwrap().command {
         CommandType::List => {
             let controller = Ec2Controller::new(&region).await;
-            controller.list_instances(false).await.unwrap();
+            controller.list_instances(false).await.unwrap_or_else(|e| {
+                println!("Error listing instances: {}", e);
+                std::process::exit(1);
+            });
         }
         CommandType::Start => {
             let controller = Ec2Controller::new(&region).await;
             let dns = controller
                 .start_instance(&command.unwrap().options)
                 .await
-                .unwrap();
+                .unwrap_or_else(|e| {
+                    println!("Error starting instance: {}", e);
+                    std::process::exit(1);
+                });
             println!("New dns: {:?}", dns);
         }
         CommandType::Stop => {
@@ -50,11 +63,17 @@ async fn main() {
             controller
                 .stop_instance(&command.unwrap().options)
                 .await
-                .unwrap();
+                .unwrap_or_else(|e| {
+                    println!("Error stopping instance: {}", e);
+                    std::process::exit(1);
+                });
         }
         CommandType::Configure => {
             let controller = Ec2Controller::new(&region).await;
-            controller.configure().await.unwrap();
+            controller.configure().await.unwrap_or_else(|e| {
+                println!("Error configuring controller: {}", e);
+                std::process::exit(1);
+            });
         }
         _ => {
             println!("{}", HELP);
